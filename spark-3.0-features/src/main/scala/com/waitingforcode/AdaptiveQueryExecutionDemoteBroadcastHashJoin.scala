@@ -12,7 +12,13 @@ object AdaptiveQueryExecutionDemoteBroadcastHashJoin extends App {
     .config("spark.sql.adaptive.localShuffleReader.enabled", false)
     // Set up a very small ratio - normally it's equal to 0.005 - to see the
     // demote not working
-    .config("spark.sql.adaptive.nonEmptyPartitionRatioForBroadcastJoin", 0.00000001d)
+    //.config("spark.sql.adaptive.nonEmptyPartitionRatioForBroadcastJoin", 0.00000001d)
+    //
+    // Uncomment this line if you want to see one side of the join (input5) broadcasted
+    // Normally the ratio between non empty and all partitions is 0.015 in that case and
+    // setting 0.01 should invalidate the broadcast on the input4 and accept it on the input5
+    //.config("spark.sql.adaptive.nonEmptyPartitionRatioForBroadcastJoin", 0.01)
+    //
     .getOrCreate()
   import sparkSession.implicits._
 
