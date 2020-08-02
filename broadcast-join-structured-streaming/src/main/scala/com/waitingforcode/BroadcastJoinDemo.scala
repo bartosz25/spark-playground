@@ -64,7 +64,7 @@ object DataOverwriter extends App {
                     |{"nr": 6, "is_even": true, "new_field": "a","ts": "${System.currentTimeMillis()}"}
                     |""".stripMargin
 
-  val versionToWrite = version2
+  val versionToWrite = version1
 
   // To illustrate that the new dataset is taken, hence the batch dataset is read,
   // replace the `versionToWrite` by `version2` and rerun the generator
