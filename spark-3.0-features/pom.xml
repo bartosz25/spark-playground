@@ -85,6 +85,12 @@
             <artifactId>spark-hive_2.12</artifactId>
             <version>${spark.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-kubernetes_2.12</artifactId>
+            <version>${spark.version}</version>
+        </dependency>
+
 
         <dependency>
             <groupId>org.scalatest</groupId>
