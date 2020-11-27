@@ -25,8 +25,8 @@ object InPlaceOperationsExample extends App {
   // Now, let's make a change
   println("After the operations")
   val deltaTable = DeltaTable.forPath(localSparkSession, outputDir)
-  deltaTable.delete("nr_multiplied_by_2 % 2 != 0")
-  deltaTable.updateExpr("nr_multiplied_by_2 % 2 = 0",
+  deltaTable.delete("nr > 6")
+  deltaTable.updateExpr("nr < 3",
     Map("nr_multiplied_by_2" -> "nr_multiplied_by_2 + 1"))
 
 

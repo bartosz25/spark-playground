@@ -25,7 +25,7 @@ object AcidGuaranteeExample extends App {
   numbers.write.mode("overwrite").json(jsonDir)
   localSparkSession.read.json(jsonDir).show(false)
   try {
-    numbers.as[Int] // Add a breakpoint here, when reached do `ls /tmp/nad/data-acid/`
+    numbers.as[Int]
       .map(number => {
         if (number == 8) {
           throw new RuntimeException("Planed exception, broken consistency!")

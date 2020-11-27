@@ -48,7 +48,8 @@ object SchemaManagementExample extends App {
   val stringifiedNumbers = (0 to 10).map(nr => (nr.toString, s"Number=${nr}", nr*2))
     .toDF("value", "label", "value_multiplied_by_2")
   Try {
-    stringifiedNumbers.write.format("delta").mode("append").save(tableDir)
+    stringifiedNumbers.write.format("delta").mode("append").option("mergeSchema", true)
+      .save(tableDir)
   }.toEither match {
     case Left(error) => {
       error.printStackTrace()
@@ -61,7 +62,6 @@ object SchemaManagementExample extends App {
   // Will overwrite everything!!!!!! Cna be a costly operation!
   stringifiedNumbers.write.format("delta")
     // IMPORTANT! Mode has to be overwrite!;
-    // TODO demo --> show what happens if commented!
     .mode("overwrite")
     .option("mergeSchema", true).option("overwriteSchema", true)
     .save(tableDir)
