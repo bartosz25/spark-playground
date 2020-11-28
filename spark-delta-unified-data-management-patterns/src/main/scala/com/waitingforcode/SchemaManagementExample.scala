@@ -60,10 +60,9 @@ object SchemaManagementExample extends App {
   }
   println("[DEBUG] Let's redo this operation but this time with overwriteSchema option")
   // Will overwrite everything!!!!!! Cna be a costly operation!
-  stringifiedNumbers.write.format("delta")
-    // IMPORTANT! Mode has to be overwrite!;
+  stringifiedNumbers.write.format("delta") 
     .mode("overwrite")
-    .option("mergeSchema", true).option("overwriteSchema", true)
+    .option("overwriteSchema", true)
     .save(tableDir)
 
   println("[DEBUG] Let's see know the data and the schema")
