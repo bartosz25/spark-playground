@@ -25,8 +25,8 @@ object PartitionWiseSimulationExample extends App {
 
   def listAllPartitions = Seq(0, 1, 2) // static for tests, but can use data catalog to get this info
 
-  val dataset1Cached = sparkSession.read.json(dataset1Location).cache()
-  val dataset2Cached = sparkSession.read.json(dataset2Location).cache()
+  //val dataset1Cached = sparkSession.read.json(dataset1Location).cache()
+  //val dataset2Cached = sparkSession.read.json(dataset2Location).cache()
   val partitionWiseJoins = listAllPartitions.map(partitionNumber => {
     // It's important to "push down" the partition predicate to make
     // the dataset smaller and eventually take advantage of small dataset
@@ -38,9 +38,5 @@ object PartitionWiseSimulationExample extends App {
   })
 
   val unions = partitionWiseJoins.reduce((leftDataset, rightDataset) => leftDataset.unionAll(rightDataset))
-  unions.explain(true)
-
-  sparkSession.read.json(dataset1Location).join(
-    sparkSession.read.json(dataset2Location), "order_id"
-  ).explain(true)
+  unions.show(true)
 }
