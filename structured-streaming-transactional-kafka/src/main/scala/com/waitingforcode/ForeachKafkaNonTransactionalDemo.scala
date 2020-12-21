@@ -2,10 +2,10 @@ package com.waitingforcode
 
 import org.apache.spark.sql.SparkSession
 
-object ForeachKafkaTransactionalDemo extends App {
+object ForeachKafkaNonTransactionalDemo extends App {
 
   val sparkSession = SparkSession.builder()
-    .appName("Foreach Kafka transactional demo").master("local[*]")
+    .appName("Foreach Kafka non transactional demo").master("local[*]")
     .getOrCreate()
   import sparkSession.implicits._
   val inputKafkaRecords = sparkSession.readStream
@@ -16,11 +16,22 @@ object ForeachKafkaTransactionalDemo extends App {
     .option("maxOffsetsPerTrigger", 10)
     .load()
     .selectExpr("CAST(value AS STRING)").as[String]
+    .mapPartitions(letters => {
+      letters.map(letter => {
+        if (letter == "K" && ShouldFailOnK) {
+          throw new RuntimeException("Got letter that stops the processing")
+        }
+        letter
+      })
+    })
 
   val writeQuery = inputKafkaRecords
     .writeStream
-    .option("checkpointLocation", OutputDirCheckpointTransactional)
-    .foreach(new ForeachKafkaTransactionalWriter(OutputTopicTransactional))
+    .option("checkpointLocation", OutputDirCheckpointNonTransactional)
+    .format("kafka")
+    .option("kafka.bootstrap.servers", "localhost:29092")
+    .option("topic", OutputTopicNonTransactional)
+
 
   writeQuery.start().awaitTermination()
 

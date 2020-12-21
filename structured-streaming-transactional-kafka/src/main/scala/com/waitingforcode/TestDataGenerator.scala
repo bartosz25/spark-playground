@@ -4,29 +4,27 @@ import org.apache.kafka.clients.producer.{KafkaProducer, ProducerRecord}
 
 import scala.sys.process.Process
 
-object JsonDataGenerator extends App {
+object TestDataGenerator extends App {
 
-  println("== Deleting already existing topic ==")
-  val deleteTopicResult =
-    Process(s"docker exec broker_kafka_1 kafka-topics.sh --bootstrap-server localhost:29092 --topic ${OutputTopicTransactional} --delete").run()
-  deleteTopicResult.exitValue()
-  println(s"== Creating ${OutputTopicTransactional} ==")
-  val createTopicResult =
-    Process(s"docker exec broker_kafka_1 kafka-topics.sh --bootstrap-server localhost:29092 --topic ${OutputTopicTransactional} --create --partitions 2").run()
-  createTopicResult.exitValue()
+  val topics = Seq(OutputTopicTransactional, OutputTopicNonTransactional, InputTopicName)
+  topics.foreach(topic => {
+    println(s"== Deleting already existing topic ${topic} ==")
+    val deleteTopicResult =
+      Process(s"docker exec broker_kafka_1 kafka-topics.sh --bootstrap-server localhost:29092 --topic ${topic} --delete").run()
+    deleteTopicResult.exitValue()
+    println(s"== Creating ${topic} ==")
+    val createTopicResult =
+      Process(s"docker exec broker_kafka_1 kafka-topics.sh --bootstrap-server localhost:29092 --topic ${topic} --create --partitions 2").run()
+    createTopicResult.exitValue()
+  })
 
   // Used to the run before the failure
   val messagesToSendRun1 = Seq(
     Seq("A", "B", "C", "D"),
     Seq("E", "F", "G", "H"),
     Seq("I", "J", "K", "L"),
-  )
-  // Used for the run after the failure
-  val messagesToSendRun2 = Seq(
-    messagesToSendRun1(2),
     Seq("M", "N", "O", "P")
   )
-
   import scala.collection.JavaConverters.mapAsJavaMapConverter
   val kafkaProducer = new KafkaProducer[String, String](Map[String, Object](
     "bootstrap.servers" -> "localhost:29092",
@@ -37,9 +35,13 @@ object JsonDataGenerator extends App {
   scala.io.StdIn.readLine()
   val messagesToSend = messagesToSendRun1
   messagesToSend.foreach(messages => {
+    var counter = 0
     messages.foreach(recordToSend => {
       println(s"Sending ${recordToSend}")
-      kafkaProducer.send(new ProducerRecord[String, String](InputTopicName, recordToSend))
+      val partition = counter % 2
+      kafkaProducer.send(new ProducerRecord[String, String](InputTopicName, partition,
+        s"dummy ${recordToSend} ${System.currentTimeMillis()}", recordToSend))
+      counter += 1
     })
     kafkaProducer.flush()
     println("Press enter to send another message")

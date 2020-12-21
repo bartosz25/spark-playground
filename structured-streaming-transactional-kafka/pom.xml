@@ -75,5 +75,10 @@
             <artifactId>spark-sql-kafka-0-10_2.12</artifactId>
             <version>${spark.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.mapdb</groupId>
+            <artifactId>mapdb</artifactId>
+            <version>3.0.8</version>
+        </dependency>
     </dependencies>
 </project>
