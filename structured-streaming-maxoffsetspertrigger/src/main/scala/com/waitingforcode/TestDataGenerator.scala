@@ -14,7 +14,7 @@ object TestDataGenerator extends App {
     deleteTopicResult.exitValue()
     println(s"== Creating ${topic} ==")
     val options = if (topic == AnotherLessPerfectUseCaseTopicName) {
-      "--config min.compaction.lag.ms=100 --config max.compaction.lag.ms=100 --config cleanup.policy=compact --config min.cleanable.dirty.ratio=0.001"
+      "-config max.compaction.lag.ms=5000  --config min.compaction.lag.ms=5000  --config cleanup.policy=compact  --config min.cleanable.dirty.ratio=0.001"
     } else {
       ""
     }
@@ -38,12 +38,12 @@ object TestDataGenerator extends App {
     Map(
       PerfectUseCaseTopicName -> Seq("I", "J", "K", "L"),
       LessPerfectUseCaseTopicName -> Seq("I1", "J1"),
-      AnotherLessPerfectUseCaseTopicName -> Seq("I2", "J2", "G2")
+      AnotherLessPerfectUseCaseTopicName -> Seq("I2", "J2", "G2", "D2")
     ),
     Map(
       PerfectUseCaseTopicName -> Seq("M", "N", "O", "P"),
       LessPerfectUseCaseTopicName -> Seq("K1", "L1", "M1", "N1"),
-      AnotherLessPerfectUseCaseTopicName -> Seq("K2", "L2", "M2", "N2")
+      AnotherLessPerfectUseCaseTopicName -> Seq("A2", "K2", "G2", "D2", "M2", "N2")
     )
   )
   import scala.collection.JavaConverters.mapAsJavaMapConverter
