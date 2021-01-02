@@ -1,13 +1,16 @@
-package com.waitingforcode
+package com.waitingforcode.bypassmerge
 
+import com.waitingforcode.User
 import org.apache.spark.sql.SparkSession
 
-object UsersAggregator extends App {
+object BypassMergeShuffleWriterExample extends App {
 
   val sparkSession = SparkSession.builder()
-    .appName("Spark Shuffle writers").master("local[*]")
+    .appName("Bypass merge shuffle writer").master("local[*]")
+    .config("spark.default.parallelism", 3)
     // Let's keep it small for a simpler demonstration
-    .config("spark.sql.shuffle.partitions", 5)
+    .config("spark.sql.shuffle.partitions", 2)
+    .config("spark.shuffle.sort.bypassMergeThreshold", 10)
     .getOrCreate()
 
   import sparkSession.implicits._
@@ -21,5 +24,3 @@ object UsersAggregator extends App {
 
   groupedUsers.show(truncate = false)
 }
-
-case class User(id: String, login: String)
