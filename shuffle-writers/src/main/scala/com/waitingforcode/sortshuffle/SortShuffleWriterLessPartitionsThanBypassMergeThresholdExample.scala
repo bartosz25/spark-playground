@@ -8,8 +8,9 @@ object SortShuffleWriterLessPartitionsThanBypassMergeThresholdExample extends Ap
   var sparkContext = SparkContext.getOrCreate(conf)
 
   val numbersRdd = sparkContext.parallelize(1 to 20, 2)
-  val sumComputation = (v1: Int, v2: Int) => v1 + v2
 
-  val treeSum = numbersRdd.treeReduce(sumComputation, 2)
+  val oddAndEvenNumbers = numbersRdd.map(nr => (nr % 2, nr))
+    .groupByKey().mapValues(numbers => numbers.count(_ => true))
+    .collect()
 }
 
