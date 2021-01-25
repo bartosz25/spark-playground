@@ -6,7 +6,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 // unsafe writer doesn't support serialized objects
 object MapSideCombineWithSerializedShuffleExample extends App {
 
-  val conf = new SparkConf().setAppName("Tree aggregation for SortShuffleWriter").setMaster("local")
+  val conf = new SparkConf().setAppName("Tree aggregation for UnsafeShuffleWriter").setMaster("local")
   var sparkContext = SparkContext.getOrCreate(conf)
 
   val numbersRdd = sparkContext.parallelize(1 to 20, 10)

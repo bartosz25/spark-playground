@@ -7,7 +7,7 @@ object RepartitionDemo extends App {
   val  sparkSession = SparkSession.builder()
     .appName("Repartition").master("local[*]")
     .config("spark.default.parallelism", 3)
-    // TODO: disable sortbefore!
+    // disable sortbefore in the 2nd execution
     //.config("spark.sql.execution.sortBeforeRepartition", false)
     .getOrCreate()
   import sparkSession.implicits._
