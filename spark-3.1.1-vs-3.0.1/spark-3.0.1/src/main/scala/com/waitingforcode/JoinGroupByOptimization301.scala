@@ -7,16 +7,19 @@ object JoinGroupByOptimization301 extends App {
 
   private val testSparkSession = SparkSession.builder()
     .appName("#hash-shuffle-join").master("local[*]")
-    .config("spark.sql.autoBroadcastJoinThreshold", 1)
+    // Big number so that shuffle will be more attractive than the broadcast join
+    // left side plan is 352 ; condition: shuffle partitions * threshold
+    .config("spark.sql.autoBroadcastJoinThreshold", 2)
     .config("spark.sql.join.preferSortMergeJoin", false)
     .getOrCreate()
   import testSparkSession.implicits._
 
-  val usersFromShop1 = (0 to 10).map(nr => (s"User#${nr}", nr)).toDF("loginShop1", "id")
-  val usersFromShop2 = (4 to 10).map(nr => (s"User#${nr}", nr)).toDF("loginShop2", "id")
+  val usersFromShop1 = (8 to 10).map(nr => (s"User#${nr}", nr)).toDF("loginShop1", "id")
+  val usersFromShop2 = (0 to 10).map(nr => (s"User#${nr}", nr)).toDF("loginShop2", "id")
 
-  val groupedUsers = usersFromShop1.join(usersFromShop2, usersFromShop1("id") === usersFromShop2("id"))
-    .groupByKey(row => row.getAs[Int]("id"))
+  val groupedUsers = usersFromShop1.join(usersFromShop2,
+    usersFromShop1("id") === usersFromShop2("id"), "inner")
+    .groupBy(usersFromShop1("id"))
     .count()
 
   groupedUsers.explain(true)

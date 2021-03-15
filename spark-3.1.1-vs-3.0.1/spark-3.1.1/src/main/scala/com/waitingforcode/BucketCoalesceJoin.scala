@@ -34,6 +34,7 @@ object BucketCoalesceJoin extends App {
     .explain(true)
 
   println("================== Bucket coalesce - not applied =====================")
+  // Number of buckets cannot be divided
   sparkSession.sql(
     """SELECT s1.*, s3.* FROM users_shop_1 s1
       |JOIN users_shop_3 s3 ON s3.id = s1.id""".stripMargin)
