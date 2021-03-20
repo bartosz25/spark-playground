@@ -1,15 +1,12 @@
 from pyspark import Row
 from pyspark.sql import SparkSession
 
-User = Row("name")
+User = Row("name", "age")
 
-# Type errors detection at runtime
-spark_session = SparkSession.builder.master(User("a", 20))
+spark_session = SparkSession.builder.master(User("d", 4)).getOrCreate()
 
 df = spark_session.createDataFrame([
-    User("a", 49), User("b", 20), User("c", 20), User("d", 41)
+    User("a", 1), User("b", 2), User("c", 3), User("d", 4)
 ])
 
-# type CTRL+space to see the autocomplete list, completely not appropriate!
-df.
-
+df.show(truncate=False, vertical=True)

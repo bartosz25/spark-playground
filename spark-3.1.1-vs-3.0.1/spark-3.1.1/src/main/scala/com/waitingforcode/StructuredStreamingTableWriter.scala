@@ -23,8 +23,6 @@ object StructuredStreamingTableWriter extends App {
   val sparkSession = SparkSession.builder()
     .appName("Table writer").master("local[*]")
     .config("spark.sql.shuffle.partitions", 2)
-    // TODO: check whether this data warehouse location is required for the remote metastore
-    .config("spark.sql.warehouse.dir", demoWarehouseDir)
     // Configuration for the external metastore
     .config("hive.metastore.uris", "thrift://localhost:9083")
     .config("spark.hadoop.fs.s3a.access.key", "accesskey")
@@ -44,7 +42,7 @@ object StructuredStreamingTableWriter extends App {
   val writeQuery = rateStream.writeStream
     .format("json")
     .option("checkpointLocation", checkpointDir)
-    .toTable("rate_table")
+    .toTable("rate_table2")
 
   writeQuery.awaitTermination()
 }

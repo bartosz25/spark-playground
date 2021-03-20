@@ -3,11 +3,10 @@ from pyspark.sql import SparkSession
 
 User = Row("name")
 
-# Type errors detection at runtime
-spark_session = SparkSession.builder.master(User("a"))
+spark_session = SparkSession.builder.master("local").getOrCreate()
 
 df = spark_session.createDataFrame([
     User("a"), User("b"), User("c"), User("d")
 ])
-# type CTRL+space to see the autocomplete list, completely not appropriate!
-df.
+
+df.sh

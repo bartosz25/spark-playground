@@ -8,7 +8,6 @@ object StructuredStreamingTableReader extends App {
   val sparkSession = SparkSession.builder()
     .appName("Table reader").master("local[*]")
     .config("spark.sql.shuffle.partitions", 2)
-    .config("spark.sql.warehouse.dir", demoWarehouseDir)
     .config("hive.metastore.uris", "thrift://localhost:9083")
     .config("spark.hadoop.fs.s3a.access.key", "accesskey")
     .config("spark.hadoop.fs.s3a.secret.key", "secretkey")
@@ -19,7 +18,7 @@ object StructuredStreamingTableReader extends App {
     .getOrCreate()
 
   val rateStreamTable = sparkSession.readStream
-    .table("rate_table")
+    .table("rate_table2")
 
   val writeQuery = rateStreamTable.writeStream.format("console").option("truncate", false)
 
