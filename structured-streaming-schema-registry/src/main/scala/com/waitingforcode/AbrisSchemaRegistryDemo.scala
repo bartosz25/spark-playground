@@ -27,7 +27,7 @@ object AbrisSchemaRegistryDemo extends App {
       .downloadReaderSchemaByLatestVersion
       .andTopicNameStrategy(DemoTopicName)
       .usingSchemaRegistry(SchemaRegistryUrl)).as("record"))
-    .selectExpr("record.*")
+    .selectExpr("record", "record.*")
 
   val writeQuery = avroOrders
     .writeStream
