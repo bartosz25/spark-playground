@@ -30,7 +30,7 @@ object NotInVsNotExistsSingleColumn {
     val notExistsQuery = sparkSession.sql(
       """
         |SELECT id, login, number FROM users WHERE NOT EXISTS (SELECT 1 FROM registered r
-        |WHERE r.userId <=> id)
+        |WHERE r.userId = id)
         |""".stripMargin)
     notExistsQuery.explain(true)
     //notExistsQuery.show(false)
