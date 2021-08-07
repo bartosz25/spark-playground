@@ -15,7 +15,6 @@ minikube image ls
 kubectl create namespace stage-level-scheduling-demo
 kubectl config set-context --current --namespace=stage-level-scheduling-demo
 kubectl create serviceaccount spark
-kubectl create clusterrolebinding spark-role --clusterrole=edit --serviceaccount=stage-level-scheduling-demo:spark --namespace=stage-level-scheduling-demo
 kubectl create rolebinding spark-role --clusterrole=edit --serviceaccount=stage-level-scheduling-demo:spark --namespace=stage-level-scheduling-demo
 
 ```
