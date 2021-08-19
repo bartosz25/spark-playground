@@ -23,14 +23,6 @@
 5. Type _12_ in the Kafka producer console
 6. You should see a matched row
 
-## Streaming join
-1. Start the `json.StreamingJoinApp`
-2. Type _2_ in the Kafka producer console
-3. You should see a match in the streaming job output
-4. Run `StaticDataWriterV2' class.
-5. Type _12_ in the Kafka producer console
-6. You should see a matched row
-
 ## Delta Lake batch join
 1. Start the `delta.DeltaLakeJoinApp`
 2. Type _2_ in the Kafka producer console
