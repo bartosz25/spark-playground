@@ -40,6 +40,7 @@ object StatefulMapper {
   def mapDataStatefully(key: Long, data: Iterator[Row], state: GroupState[String]): Option[String] = {
     println(s"wm=${state.getCurrentWatermarkMs()}")
     if (!state.exists || !state.hasTimedOut) {
+      println(s"Updating ${state} for ${key}")
       state.update(s"state for ${key} from ${new Date()}")
       state.setTimeoutTimestamp(state.getCurrentWatermarkMs()+4000L)
     } else if (state.hasTimedOut) {
