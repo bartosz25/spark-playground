@@ -10,7 +10,7 @@ object ExternalTableExample3_ReadAfterRemoveApp extends App {
     .enableHiveSupport()
     .getOrCreate()
 
-  // Let's first remove one of the internal tables
+  // Let's first remove one of the external tables
   sparkSession.sql("DROP TABLE letters_saveastable")
 
   // Check if the table data is there

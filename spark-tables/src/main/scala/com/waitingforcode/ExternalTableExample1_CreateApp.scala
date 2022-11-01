@@ -26,6 +26,7 @@ object ExternalTableExample1_CreateApp extends App {
 
   data.write.mode(SaveMode.Overwrite).option("path", externalDataOutputDir).saveAsTable("letters_saveastable")
 
+  // better to define the EXTERNAL because if you forget the LOCATION, Spark will create an internal table
   data.createTempView("temp_letters")
   sparkSession.sql(
     s"""
@@ -39,7 +40,7 @@ object ExternalTableExample1_CreateApp extends App {
   sparkSession.sql(
     s"""
       |CREATE TABLE letters_like LIKE temp_letters LOCATION '${externalDataOutputDir}'
-      |""".stripMargin) // TODO: here the location marks the table as extenral, there is no 'external' keyword https://spark.apache.org/docs/latest/sql-ref-syntax-ddl-create-table-like.html
+      |""".stripMargin) // here the location marks the table as extenral, there is no 'external' keyword https://spark.apache.org/docs/latest/sql-ref-syntax-ddl-create-table-like.html
 
   sparkSession.catalog.listTables().toDF().show(false)
 
