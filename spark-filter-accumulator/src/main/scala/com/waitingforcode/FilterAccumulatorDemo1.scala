@@ -6,8 +6,7 @@ import org.apache.spark.util.LongAccumulator
 object FilterAccumulatorDemo1 {
 
   def main(args: Array[String]): Unit = {
-    val sparkSession = SparkSession.builder().master("local[2, 2]")
-      .config("spark.task.maxFailures", 2)
+    val sparkSession = SparkSession.builder().master("local[*]")
       .getOrCreate()
 
     import sparkSession.implicits._
@@ -24,7 +23,7 @@ object FilterAccumulatorDemo1 {
 
 
     val filteredInput = dataset.filter(idFilter.filter _).filter(evenIdFilter.filter _)
-    filteredInput.collect()
+    filteredInput.write.format("console").save()
     println(s"idFilterAccumulator=${idFilterAccumulator.count}")
     println(s"evenIdFilterAccumulator=${evenIdFilterAccumulator.count}")
   }

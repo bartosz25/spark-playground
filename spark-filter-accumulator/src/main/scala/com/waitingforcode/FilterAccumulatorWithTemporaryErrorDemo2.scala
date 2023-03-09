@@ -3,17 +3,17 @@ package com.waitingforcode
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.util.LongAccumulator
 
-import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 
-object FilterAccumulatorDemo1 {
+object FilterAccumulatorWithTemporaryErrorDemo2 {
 
   def main(args: Array[String]): Unit = {
-    val sparkSession = SparkSession.builder().master("local[2, 2]")
-      .config("spark.task.maxFailures", 2)
+    val sparkSession = SparkSession.builder().master("local[1, 3]")
+      .config("spark.task.maxFailures", 3)
       .getOrCreate()
 
     import sparkSession.implicits._
-    val dataset = (0 to 100).map(nr => UserToTest(nr, s"user${nr}")).toDS
+    val dataset = (0 to 100).map(nr => UserToTest(nr, s"user${nr}")).toDS.repartition(100)
 
     val idFilterAccumulator = sparkSession.sparkContext.longAccumulator("idFilterAccumulator")
     val evenIdFilterAccumulator = sparkSession.sparkContext.longAccumulator("lowerUpperCaseFilterAccumulator")
@@ -26,21 +26,21 @@ object FilterAccumulatorDemo1 {
 
 
     val filteredInput = dataset.filter(idFilter.filter _).filter(evenIdFilter.filter _)
-    filteredInput.collect()
+    filteredInput.write.format("console").save()
     println(s"idFilterAccumulator=${idFilterAccumulator.count}")
     println(s"evenIdFilterAccumulator=${evenIdFilterAccumulator.count}")
   }
 
 }
 
-case class UserToTest(id: Int, login: String)
 
 class FilterWithAccumulatedResultWithFailure(filterMethod: (UserToTest) => Boolean, resultAccumulator: LongAccumulator) extends Serializable {
 
   def filter(userToTest: UserToTest): Boolean = {
     val result = filterMethod(userToTest)
     if (!result) resultAccumulator.add(1L)
-    if (!result && userToTest.id == 11 && FailureFlagHolder.isFailed.getAndSet(true) == false) {
+    if (!result && userToTest.id == 11 && FailureFlagHolder.isFailed.incrementAndGet() < 3) {
+      println(s"Testing for ${userToTest.id}")
       throw new RuntimeException("temporary error")
     }
     result
@@ -50,6 +50,6 @@ class FilterWithAccumulatedResultWithFailure(filterMethod: (UserToTest) => Boole
 
 object FailureFlagHolder {
 
-  val isFailed = new AtomicBoolean(false)
+  val isFailed = new AtomicInteger(0)
 
 }
