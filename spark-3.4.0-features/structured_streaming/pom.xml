@@ -70,10 +70,14 @@
             <artifactId>spark-sql_2.12</artifactId>
             <version>${spark.version}</version>
         </dependency>
-        <!-- not used in the code but useful for the internals analysis (e.g. the available now trigger) -->
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-sql-kafka-0-10_2.12</artifactId>
+            <version>${spark.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-protobuf_2.12</artifactId>
             <version>${spark.version}</version>
         </dependency>
     </dependencies>
