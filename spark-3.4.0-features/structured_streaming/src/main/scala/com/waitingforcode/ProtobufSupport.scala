@@ -30,6 +30,7 @@ object ProtobufSupport {
     // To generate the descriptor file, you must install the `protoc` library
     // and call:
     // protoc --descriptor_set_out=/tmp/spark/3.4.0/protobuf/protobuf.pb --proto_path=/tmp/spark/3.4.0/protobuf protobuf.schema
+    // If you want, you can use the file available in the resources folder
 
     import sparkSession.implicits._
     val datasetWithProtobuf = Seq(
