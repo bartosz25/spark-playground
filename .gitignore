@@ -69,6 +69,7 @@ work/
 src/test/resources/generated_file_1_gb.txt
 src/test/resources/generated_file_500_mb.txt
 metastore_db
+__pycache__/
 
 # End of https://www.gitignore.io/api/sbt,scala,intellij
 
