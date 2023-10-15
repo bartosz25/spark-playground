@@ -71,7 +71,6 @@ object WatermarkPropagation {
     ))
     query.processAllAvailable()
 
-sys.exit(1)
     impressionsStream.addData(Seq(
       Impression(5, Timestamp.valueOf("2023-06-10 11:00:00"))
     ))
