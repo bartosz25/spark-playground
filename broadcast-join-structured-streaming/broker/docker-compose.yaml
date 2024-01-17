@@ -1,36 +1,20 @@
-version: '3'
-
+version: '3.1'
 services:
-  zookeeper:
-    image: 'bitnami/zookeeper:3'
-    ports:
-      - '2181:2181'
-    environment:
-      - ALLOW_ANONYMOUS_LOGIN=yes
-    volumes:
-      - 'zookeeper_data:/bitnami'
   kafka:
-    image: 'bitnami/kafka:2'
-    depends_on:
-      - zookeeper
+    image: 'bitnami/kafka:3.5'
+    container_name: docker_kafka_
     ports:
       - '9092:9092'
-      - '29092:29092'
-    volumes:
-      - 'kafka_data:/bitnami'
-      - './log4j.properties:/tmp/log4j.properties'
+      - '9094:9094'
     environment:
-      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
-      - ALLOW_PLAINTEXT_LISTENER=yes
-      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,PLAINTEXT_HOST://:29092
-      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      # KRaft settings
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      # Listeners
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
       - KAFKA_DELETE_TOPIC_ENABLE=true
-      - KAFKA_OPTS=-Dlog4j.configuration=file:/tmp/log4j.properties
-
-volumes:
-  zookeeper_data:
-    driver: local
-  kafka_data:
-    driver: local
-

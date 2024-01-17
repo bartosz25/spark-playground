@@ -10,7 +10,7 @@ import org.apache.spark.sql.{Row, SparkSession}
 
 // Next, create with only 2 partitions for easier debugging
 // kafka-topics.sh --bootstrap-server localhost:9092 --topic broadcast_variable_demo --partitions 2 --create
-// kafka-console-producer.sh --broker-list localhost:29092 --topic broadcast_variable_demo
+// kafka-console-producer.sh --broker-list localhost:9094 --topic broadcast_variable_demo
 object BroadcastVariableDemo extends App {
 
   val sparkSession = SparkSession.builder()
@@ -32,7 +32,7 @@ object BroadcastVariableDemo extends App {
 
   val kafkaSource = sparkSession.readStream
     .format("kafka")
-    .option("kafka.bootstrap.servers", "localhost:29092")
+    .option("kafka.bootstrap.servers", "localhost:9094")
     .option("client.id", "broadcast_variable_client")
     .option("subscribe", "broadcast_variable_demo")
     .option("startingOffsets", "EARLIEST")

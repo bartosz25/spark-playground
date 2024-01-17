@@ -18,7 +18,7 @@ object DeltaLakeJoinApp extends App {
 
   val kafkaSource = sparkSession.readStream
     .format("kafka")
-    .option("kafka.bootstrap.servers", "localhost:29092")
+    .option("kafka.bootstrap.servers", "localhost:9094")
     .option("client.id", "broadcast_join_demo_new_file_created_client")
     .option("subscribe", "broadcast_join_demo_new_file_created")
     .option("startingOffsets", "LATEST")
