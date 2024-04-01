@@ -64,6 +64,13 @@ object VisitsCounterInWindows {
       }
     }).start()
 
+    /*
+    sys.addShutdownHook {
+      println(s"SHUTDOWN!!!!!!!! ==> ${startedAggregationQuery.status}")
+      while (startedAggregationQuery.status.isTriggerActive) {}
+      startedAggregationQuery.stop()
+    }*/
+
     // docker exec -ti wfc_kafka kafka-console-producer.sh --topic markers --bootstrap-server localhost:9092
 
     sparkSession.streams.awaitAnyTermination()
