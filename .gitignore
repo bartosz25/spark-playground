@@ -12,6 +12,7 @@
 ## File-based project format:
 *.iws
 *.iml
+*.bsp
 
 ## Plugin-specific files:
 
