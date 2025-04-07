@@ -1,0 +1,35 @@
+resources:
+  jobs:
+    wfc_se_demo:
+      name: wfc_se_demo
+      schedule:
+        quartz_cron_expression: "0 0 8 * * ?"
+        timezone_id: UTC
+        pause_status: UNPAUSED
+      tasks:
+        - task_key: refresh_accounts
+          job_cluster_key: loading_cluster
+          timeout_seconds: 600
+          python_wheel_task:
+            package_name: wfc
+            entry_point: refresh_accounts
+          libraries:
+            - whl: ../dist/*.whl
+      job_clusters:
+        - job_cluster_key: loading_cluster
+          new_cluster:
+            spark_version: 15.4.x-scala2.12
+            node_type_id: i4i.large
+            autotermination_minutes: 5
+            runtime_engine: STANDARD
+            data_security_mode: SINGLE_USER
+            spark_conf:
+              "spark.databricks.cluster.profile": "singleNode"
+              "spark.master": "local[*, 4]"
+            custom_tags:
+              "ResourceClass": "SingleNode"
+            workload_type:
+              clients:
+                notebooks: false
+                jobs: true
+            num_workers: 0
