@@ -1,0 +1,3 @@
+pyspark==3.5.0
+databricks-labs-dqx==0.4.0
+delta-spark==3.0.0

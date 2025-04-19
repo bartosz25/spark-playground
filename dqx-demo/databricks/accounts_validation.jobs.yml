@@ -1,0 +1,17 @@
+resources:
+  jobs:
+    accounts_validation_job:
+      name: accounts_validation_job
+      tasks:
+        - task_key: validate_accounts
+          environment_key: Default
+          timeout_seconds: 900
+          python_wheel_task:
+            package_name: wfc
+            entry_point: validate_accounts
+      environments:
+        - environment_key: Default
+          spec:
+            client: "2"
+            dependencies:
+              - ../dist/*.whl
