@@ -1,5 +1,6 @@
-package com.waitingforcode
+package com.waitingforcode.state_init
 
+import org.apache.spark.sql.classic.KeyValueGroupedDataset
 import org.apache.spark.sql.execution.streaming.MemoryStream
 import org.apache.spark.sql.streaming._
 import org.apache.spark.sql.{Encoders, SparkSession}
@@ -26,7 +27,7 @@ object TransformWithStateInitStateWithReconciliation  {
 
     val visitsInputStream = new MemoryStream[Numbers](1, sparkSession.sqlContext, Some(2))
     val visitsInput = visitsInputStream.toDS()
-    val groupedVisits = visitsInput.groupByKey(row => row.letter)
+    val groupedVisits: KeyValueGroupedDataset[String, Numbers] = visitsInput.groupByKey(row => row.letter)
 
     val sessionsMaker = groupedVisits.transformWithState(
       statefulProcessor=new TransformWithStateInitStateWithReconciliationSessionProcessor(),
