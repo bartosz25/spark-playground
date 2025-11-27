@@ -26,7 +26,7 @@ object InsertIntoByNameJob {
         | lower_case STRING,
         | upper_case STRING,
         | nr INT
-        |)
+        |) USING delta
         |""".stripMargin)
 
     println("Inserting records 'e' and 'f' with incorrect order and type mismatch...")

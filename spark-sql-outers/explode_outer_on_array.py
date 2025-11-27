@@ -8,6 +8,7 @@ letters.withColumn('letter', F.explode_outer('letters')).sort(F.asc('letter')).s
 
 
 letters_with_nulls = spark.createDataFrame([
-    {'id': 1, 'letters': ['a','b','c']}, {'id': 2, 'letters': None}, {'id': 3, 'letters': ['d',None]}
+    {'id': 1, 'letters': ['a','b','c']}, {'id': 2, 'letters': None}, {'id': 3, 'letters': ['d',None]},
+    {'id': 4, 'letters': []}
 ], 'id INT, letters ARRAY<STRING>')
 letters_with_nulls.withColumn('letter', F.explode_outer('letters')).sort(F.asc('letter')).show(truncate=False)

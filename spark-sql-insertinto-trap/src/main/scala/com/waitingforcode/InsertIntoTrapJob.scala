@@ -23,11 +23,11 @@ object InsertIntoTrapJob {
 
     sparkSession.sql(
       """
-        |CREATE TABLE numbers_with_letters (
+        |CREATE TABLE IF NOT EXISTS numbers_with_letters (
         | lower_case STRING,
         | upper_case STRING,
         | nr INT
-        |)
+        |) USING delta
         |""".stripMargin)
 
     // Let's insert first records
@@ -47,8 +47,8 @@ object InsertIntoTrapJob {
 
 
     println("Inserting records 'e' and 'f' with incorrect order and type mismatch...")
-    //Seq((5, "e", "E"), (6, "f", "F")).toDF("nr", "lower_case", "upper_case").write.format("delta")
-    //  .insertInto("numbers_with_letters")
+    Seq((5, "e", "E"), (6, "f", "F")).toDF("nr", "lower_case", "upper_case").write.format("delta")
+      .insertInto("numbers_with_letters")
 
     //sparkSession.sql("SELECT * FROM numbers_with_letters ORDER BY nr ASC").show(truncate=false)
     println("...done")
