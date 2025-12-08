@@ -1,0 +1,4 @@
+pyspark==4.0.0
+PyYAML==6.0.2
+#pandas==1.5.0
+#pyarrow==9.0.0
