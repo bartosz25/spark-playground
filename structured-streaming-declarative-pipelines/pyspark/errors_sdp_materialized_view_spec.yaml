@@ -1,0 +1,9 @@
+name: SDP|WFC Materialized View
+storage: file:////opt/spark/data/scheckpoints/errors_sdp_materialized_view
+libraries:
+  - glob:
+      include: ./errors_sdp_materialized_view.py
+configuration:
+  spark.remote: sc://localhost:15002
+  spark.sql.catalog.spark_catalog: org.apache.spark.sql.delta.catalog.DeltaCatalog
+  spark.sql.shuffle.partitions: "2"

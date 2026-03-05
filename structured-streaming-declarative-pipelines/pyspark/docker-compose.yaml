@@ -1,0 +1,75 @@
+services:
+  spark:
+    image: apache/spark:4.1.1-python3
+    ports:
+      - "15002:15002"
+      - "4040:4040"
+    volumes:
+      - ./data:/opt/spark/data
+      - ./files:/opt/spark/files
+    environment:
+      - SPARK_NO_DAEMONIZE=true  # keep process in foreground
+      - SPARK_CONF_spark_sql_extensions=io.delta.sql.DeltaSparkSessionExtension
+      - SPARK_CONF_spark_sql_catalog_spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog
+      #- SPARK_CONF_spark_sql_catalogImplementation=hive
+      - SPARK_CONF_spark_sql_warehouse_dir=/opt/spark/data # I don't know why but it doesn't work as expected...
+    entrypoint: [ '/bin/bash', '-c' ]
+    command: |
+      "
+      
+      curl -o /opt/spark/jars/kafka-clients-4.1.1.jar https://repo1.maven.org/maven2/org/apache/kafka/kafka-clients/4.1.1/kafka-clients-4.1.1.jar
+      #curl -o /opt/spark/jars/spark-streaming-kafka-0-10_2.13-4.1.0.jar https://repo1.maven.org/maven2/org/apache/spark/spark-streaming-kafka-0-10_2.13/4.1.0/spark-streaming-kafka-0-10_2.13-4.1.0.jar
+      curl -o /opt/spark/jars/spark-token-provider-kafka-0-10_2.13-4.1.1.jar  https://repo1.maven.org/maven2/org/apache/spark/spark-token-provider-kafka-0-10_2.13/4.1.1/spark-token-provider-kafka-0-10_2.13-4.1.1.jar
+      
+      curl -o /opt/spark/jars/spark-sql-kafka-0-10_2.13-4.1.0.jar https://repo1.maven.org/maven2/org/apache/spark/spark-sql-kafka-0-10_2.13/4.1.0/spark-sql-kafka-0-10_2.13-4.1.0.jar
+      curl -o /opt/spark/jars/spark-hive_2.13-4.1.0.jar https://repo1.maven.org/maven2/org/apache/spark/spark-hive_2.13/4.1.0/spark-hive_2.13-4.1.0.jar
+      curl -o /opt/spark/jars/delta-storage-4.1.0.jar https://repo1.maven.org/maven2/io/delta/delta-storage/4.1.0/delta-storage-4.1.0.jar
+      curl -o /opt/spark/jars/delta-spark_2.13-4.1.0.jar https://repo1.maven.org/maven2/io/delta/delta-spark_2.13/4.1.0/delta-spark_2.13-4.1.0.jar
+      cd /opt/spark/sbin
+      ./start-connect-server.sh
+      "
+  kafka:
+    image: apache/kafka:4.1.1
+    container_name: kafka
+    ports:
+      - "9092:9092"
+      - "9094:9094"
+    environment:
+      # KRaft settings
+      KAFKA_NODE_ID: 0
+      KAFKA_PROCESS_ROLES: controller,broker
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 0@kafka:9093
+      # Listeners
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_DELETE_TOPIC_ENABLE: true
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    healthcheck:
+      test: ["CMD", "/opt/kafka/bin/kafka-topics.sh", "--bootstrap-server=localhost:9092", "--list"]
+      start_period: 15s
+      interval: 10s
+  init-kafka:
+    image: apache/kafka:4.1.1
+    depends_on:
+      kafka:
+        condition: service_healthy
+    entrypoint: [ '/bin/sh', '-c' ]
+    command: |
+      "
+      echo 'Waiting for Kafka to be ready...'
+      # This loop checks if the broker is accepting connections on port 9092
+      until /opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server kafka:9092 > /dev/null 2>&1; do
+        echo 'Kafka is not ready yet... waiting 2 seconds'
+        sleep 2
+      done
+      # blocks until kafka is reachable
+      /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --list
+      echo -e 'Creating Kafka topics'
+      /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists --topic numbers --replication-factor 1 --partitions 1
+
+      echo -e 'Successfully created the following topics:'
+      /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --list
+      "
