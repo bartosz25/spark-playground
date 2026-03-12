@@ -16,11 +16,11 @@ services:
     entrypoint: [ '/bin/bash', '-c' ]
     command: |
       "
-      
+      # This dependency is required to avoid 
+      # java.lang.NoClassDefFoundError: org/apache/commons/pool2/impl/GenericKeyedObjectPoolConfig
+      curl -o /opt/spark/jars/commons-pool2-2.13.1.jar https://repo1.maven.org/maven2/org/apache/commons/commons-pool2/2.13.1/commons-pool2-2.13.1.jar
       curl -o /opt/spark/jars/kafka-clients-4.1.1.jar https://repo1.maven.org/maven2/org/apache/kafka/kafka-clients/4.1.1/kafka-clients-4.1.1.jar
-      #curl -o /opt/spark/jars/spark-streaming-kafka-0-10_2.13-4.1.0.jar https://repo1.maven.org/maven2/org/apache/spark/spark-streaming-kafka-0-10_2.13/4.1.0/spark-streaming-kafka-0-10_2.13-4.1.0.jar
       curl -o /opt/spark/jars/spark-token-provider-kafka-0-10_2.13-4.1.1.jar  https://repo1.maven.org/maven2/org/apache/spark/spark-token-provider-kafka-0-10_2.13/4.1.1/spark-token-provider-kafka-0-10_2.13-4.1.1.jar
-      
       curl -o /opt/spark/jars/spark-sql-kafka-0-10_2.13-4.1.0.jar https://repo1.maven.org/maven2/org/apache/spark/spark-sql-kafka-0-10_2.13/4.1.0/spark-sql-kafka-0-10_2.13-4.1.0.jar
       curl -o /opt/spark/jars/spark-hive_2.13-4.1.0.jar https://repo1.maven.org/maven2/org/apache/spark/spark-hive_2.13/4.1.0/spark-hive_2.13-4.1.0.jar
       curl -o /opt/spark/jars/delta-storage-4.1.0.jar https://repo1.maven.org/maven2/io/delta/delta-storage/4.1.0/delta-storage-4.1.0.jar
@@ -69,6 +69,7 @@ services:
       /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --list
       echo -e 'Creating Kafka topics'
       /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists --topic numbers --replication-factor 1 --partitions 1
+      /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists --topic rate-data --replication-factor 1 --partitions 1
 
       echo -e 'Successfully created the following topics:'
       /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --list

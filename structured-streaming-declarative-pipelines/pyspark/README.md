@@ -124,7 +124,7 @@ B
 C
 ```
 
-## Common upstream flow
+## Common upstream flow - memory sources
 1. Introduce [sdp_table_with_common_upstream_flow.py](sdp_table_with_common_upstream_flow.py)
 * the code verifies whether two downstream flows can work with a single append input flow
 2. Run sdp_table_with_common_upstream_flow:
@@ -258,6 +258,127 @@ rate_sink_2
 ```
 
 As you can see, here too the content is the same despite referencing the same upstream node.
+
+## Common upstream flow - Apache Kafka topic
+1. Let's see now what happens if two flows consume the same Apache Kafka topic with continuously written data.
+2. Explain the [sdp_common_upstream_topic_kafka.py](sdp_common_upstream_topic_kafka.py)
+* the Kafka reader has an artificial waiting time to give a chance for intercepting new events from the topic
+* we also set the `spark.sql.pipelines.execution.maxConcurrentFlows` to 1
+  * that way we want to see if the execution is sequential
+* besides we deliberately omitted the `maxOffsetsPerTrigger` option to add some unpredictability
+3. Explain the [sdp_common_upstream_topic_kafka_producer.py](sdp_common_upstream_topic_kafka_producer.py)
+* this is a Kafka producer that will continuously write new data to the topic
+4. Start `python sdp_common_upstream_topic_kafka_producer.py`
+5. Start the SDP:
+```shell
+spark-pipelines run --spec sdp_common_upstream_topic_kafka_spec.yaml
+```
+6. Check the content of both Delta tables `python sdp_common_upstream_topic_kafka_read_table.py`
+```
+rate_sink_1
++------------------------------------------------------------------------------------------------+
+|value                                                                                           |
++------------------------------------------------------------------------------------------------+
+|{"timestamp":"1970-01-01T00:00:15.000Z","value":159,"ingestion_time":"2026-03-12T18:07:46.000Z"}|
+|{"timestamp":"1970-01-01T00:00:15.000Z","value":158,"ingestion_time":"2026-03-12T18:07:46.000Z"}|
+|{"timestamp":"1970-01-01T00:00:15.000Z","value":157,"ingestion_time":"2026-03-12T18:07:46.000Z"}|
+|{"timestamp":"1970-01-01T00:00:15.000Z","value":156,"ingestion_time":"2026-03-12T18:07:46.000Z"}|
+|{"timestamp":"1970-01-01T00:00:15.000Z","value":155,"ingestion_time":"2026-03-12T18:07:46.000Z"}|
+|{"timestamp":"1970-01-01T00:00:15.000Z","value":154,"ingestion_time":"2026-03-12T18:07:46.000Z"}|
+|{"timestamp":"1970-01-01T00:00:15.000Z","value":153,"ingestion_time":"2026-03-12T18:07:46.000Z"}|
+|{"timestamp":"1970-01-01T00:00:15.000Z","value":152,"ingestion_time":"2026-03-12T18:07:46.000Z"}|
+|{"timestamp":"1970-01-01T00:00:15.000Z","value":151,"ingestion_time":"2026-03-12T18:07:46.000Z"}|
+|{"timestamp":"1970-01-01T00:00:15.000Z","value":150,"ingestion_time":"2026-03-12T18:07:46.000Z"}|
++------------------------------------------------------------------------------------------------+
+only showing top 10 rows
+rate_sink_2
++------------------------------------------------------------------------------------------------+
+|value                                                                                           |
++------------------------------------------------------------------------------------------------+
+|{"timestamp":"1970-01-01T00:00:16.000Z","value":169,"ingestion_time":"2026-03-12T18:07:48.004Z"}|
+|{"timestamp":"1970-01-01T00:00:16.000Z","value":168,"ingestion_time":"2026-03-12T18:07:48.004Z"}|
+|{"timestamp":"1970-01-01T00:00:16.000Z","value":167,"ingestion_time":"2026-03-12T18:07:48.004Z"}|
+|{"timestamp":"1970-01-01T00:00:16.000Z","value":166,"ingestion_time":"2026-03-12T18:07:48.004Z"}|
+|{"timestamp":"1970-01-01T00:00:16.000Z","value":165,"ingestion_time":"2026-03-12T18:07:48.004Z"}|
+|{"timestamp":"1970-01-01T00:00:16.000Z","value":164,"ingestion_time":"2026-03-12T18:07:48.004Z"}|
+|{"timestamp":"1970-01-01T00:00:16.000Z","value":163,"ingestion_time":"2026-03-12T18:07:48.004Z"}|
+|{"timestamp":"1970-01-01T00:00:16.000Z","value":162,"ingestion_time":"2026-03-12T18:07:48.004Z"}|
+|{"timestamp":"1970-01-01T00:00:16.000Z","value":161,"ingestion_time":"2026-03-12T18:07:48.004Z"}|
+|{"timestamp":"1970-01-01T00:00:16.000Z","value":160,"ingestion_time":"2026-03-12T18:07:48.004Z"}|
++------------------------------------------------------------------------------------------------+
+only showing top 10 rows
+```
+
+As you can see, despite being part of the same pipeline, both tables contain different data. 
+It's because the upstream Apache Kafka dependency is not cached anyhow and each sink runs its own 
+Apache Kafka streaming query.
+
+## Common upstream flow - Delta Lake table
+1. Explain [sdp_common_upstream_delta.py](sdp_common_upstream_delta.py)
+* the workflow is similar to the workflow used by the Kafka demo;
+  * so we have a single upstream node that serves two consumers
+2. Start `python sdp_common_upstream_delta_producer.py`
+3. Run sdp_common_upstream_delta:
+```shell
+spark-pipelines run --spec sdp_common_upstream_delta_spec.yaml
+```
+
+You should see the flows executed one after another:
+```
+2026-03-12 18:40:02: Flow spark_catalog.default.rate_sink_1_delta_table is QUEUED.
+2026-03-12 18:40:02: Flow spark_catalog.default.rate_sink_2_delta_table is QUEUED.
+2026-03-12 18:40:02: Flow spark_catalog.default.rate_sink_1_delta_table is STARTING.
+2026-03-12 18:40:02: Flow spark_catalog.default.rate_sink_1_delta_table is RUNNING.
+2026-03-12 18:40:07: Flow spark_catalog.default.rate_sink_1_delta_table has COMPLETED.
+2026-03-12 18:40:07: Flow spark_catalog.default.rate_sink_2_delta_table is STARTING.
+2026-03-12 18:40:07: Flow spark_catalog.default.rate_sink_2_delta_table is RUNNING.
+2026-03-12 18:40:12: Flow spark_catalog.default.rate_sink_2_delta_table has COMPLETED.
+2026-03-12 18:40:13: Run is COMPLETED.
+```
+4. Run `python sdp_common_upstream_delta_read_table.py`
+```
+rate_sink_1_delta_table
++-------------------------------------------------------------------------------------------------+
+|value                                                                                            |
++-------------------------------------------------------------------------------------------------+
+|{"timestamp":"1970-01-01T00:01:49.000Z","value":1099,"ingestion_time":"2026-03-12T18:40:04.001Z"}|
+|{"timestamp":"1970-01-01T00:01:49.000Z","value":1098,"ingestion_time":"2026-03-12T18:40:04.001Z"}|
+|{"timestamp":"1970-01-01T00:01:49.000Z","value":1097,"ingestion_time":"2026-03-12T18:40:04.001Z"}|
+|{"timestamp":"1970-01-01T00:01:49.000Z","value":1096,"ingestion_time":"2026-03-12T18:40:04.001Z"}|
+|{"timestamp":"1970-01-01T00:01:49.000Z","value":1095,"ingestion_time":"2026-03-12T18:40:04.001Z"}|
+|{"timestamp":"1970-01-01T00:01:49.000Z","value":1094,"ingestion_time":"2026-03-12T18:40:04.001Z"}|
+|{"timestamp":"1970-01-01T00:01:49.000Z","value":1093,"ingestion_time":"2026-03-12T18:40:04.001Z"}|
+|{"timestamp":"1970-01-01T00:01:49.000Z","value":1092,"ingestion_time":"2026-03-12T18:40:04.001Z"}|
+|{"timestamp":"1970-01-01T00:01:49.000Z","value":1091,"ingestion_time":"2026-03-12T18:40:04.001Z"}|
+|{"timestamp":"1970-01-01T00:01:49.000Z","value":1090,"ingestion_time":"2026-03-12T18:40:04.001Z"}|
++-------------------------------------------------------------------------------------------------+
+only showing top 10 rows
+rate_sink_2_delta_table
++-------------------------------------------------------------------------------------------------+
+|value                                                                                            |
++-------------------------------------------------------------------------------------------------+
+|{"timestamp":"1970-01-01T00:01:51.000Z","value":1119,"ingestion_time":"2026-03-12T18:40:08.000Z"}|
+|{"timestamp":"1970-01-01T00:01:51.000Z","value":1118,"ingestion_time":"2026-03-12T18:40:08.000Z"}|
+|{"timestamp":"1970-01-01T00:01:51.000Z","value":1117,"ingestion_time":"2026-03-12T18:40:08.000Z"}|
+|{"timestamp":"1970-01-01T00:01:51.000Z","value":1116,"ingestion_time":"2026-03-12T18:40:08.000Z"}|
+|{"timestamp":"1970-01-01T00:01:51.000Z","value":1115,"ingestion_time":"2026-03-12T18:40:08.000Z"}|
+|{"timestamp":"1970-01-01T00:01:51.000Z","value":1114,"ingestion_time":"2026-03-12T18:40:08.000Z"}|
+|{"timestamp":"1970-01-01T00:01:51.000Z","value":1113,"ingestion_time":"2026-03-12T18:40:08.000Z"}|
+|{"timestamp":"1970-01-01T00:01:51.000Z","value":1112,"ingestion_time":"2026-03-12T18:40:08.000Z"}|
+|{"timestamp":"1970-01-01T00:01:51.000Z","value":1111,"ingestion_time":"2026-03-12T18:40:08.000Z"}|
+|{"timestamp":"1970-01-01T00:01:51.000Z","value":1110,"ingestion_time":"2026-03-12T18:40:08.000Z"}|
++-------------------------------------------------------------------------------------------------+
+only showing top 10 rows
+
+Counts:
+      160
+      vs .
+      180
+
+```
+
+As you can see here, the number of lines is not the same.
+
 
 ## Errors
 1. Discuss the retries by running the [errors_sdp_materialized_view.py](errors_sdp_materialized_view.py)
