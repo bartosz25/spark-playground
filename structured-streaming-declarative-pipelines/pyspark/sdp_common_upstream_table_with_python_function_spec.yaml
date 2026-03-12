@@ -1,0 +1,9 @@
+name: SDP|WFC Materialized View
+storage: file:////opt/spark/data/checkpoints/sdp_common_upstream_table_with_python_function
+libraries:
+  - glob:
+      include: ./sdp_common_upstream_table_with_python_function.py
+configuration:
+  spark.remote: sc://localhost:15002
+  spark.sql.catalog.spark_catalog: org.apache.spark.sql.delta.catalog.DeltaCatalog
+  spark.sql.shuffle.partitions: "2"

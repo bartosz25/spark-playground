@@ -124,6 +124,141 @@ B
 C
 ```
 
+## Common upstream flow
+1. Introduce [sdp_table_with_common_upstream_flow.py](sdp_table_with_common_upstream_flow.py)
+* the code verifies whether two downstream flows can work with a single append input flow
+2. Run sdp_table_with_common_upstream_flow:
+```shell
+spark-pipelines run --spec sdp_table_with_common_upstream_flow_spec.yaml
+``` 
+
+The workflow should fail at the registration step, so it won't run:
+```
+2026-03-12 06:57:42: Loading definitions. Root directory: '/Users/bartosz/workspace/wfc/spark-playground/structured-streaming-declarative-pipelines/pyspark'.
+2026-03-12 06:57:42: Found 1 files matching glob './sdp_table_with_common_upstream_flow.py'
+2026-03-12 06:57:42: Importing /Users/bartosz/workspace/wfc/spark-playground/structured-streaming-declarative-pipelines/pyspark/sdp_table_with_common_upstream_flow.py...
+Traceback (most recent call last):
+# ...
+File "/Users/bartosz/_venvs/pyspark-4_1_0_with_pipelines/lib/python3.14/site-packages/pyspark/pipelines/cli.py", line 337, in run
+    register_definitions(spec_path, registry, spec, spark, dataflow_graph_id)
+    ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bartosz/_venvs/pyspark-4_1_0_with_pipelines/lib/python3.14/site-packages/pyspark/pipelines/cli.py", line 259, in register_definitions
+    module_spec.loader.exec_module(module)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^
+  File "<frozen importlib._bootstrap_external>", line 762, in exec_module
+  File "<frozen importlib._bootstrap>", line 491, in _call_with_frames_removed
+  File "/Users/bartosz/workspace/wfc/spark-playground/structured-streaming-declarative-pipelines/pyspark/sdp_table_with_common_upstream_flow.py", line 11, in <module>
+    @pipelines.append_flow(target='common_upstream_flow_1')
+     ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/bartosz/_venvs/pyspark-4_1_0_with_pipelines/lib/python3.14/site-packages/pyspark/python/lib/pyspark.zip/pyspark/pipelines/api.py", line 62, in outer
+    query_name = name if name is not None else func.__name__
+                                               ^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute '__name__'. Did you mean: '__ne__'?
+```
+
+3. OK, let's see now a different configuration where a temporary view feeds two downstream tables in [sdp_common_upstream_materialized_view.py](sdp_common_upstream_materialized_view.py)
+* the `in_memory_numbers_temporary_view` has an artificial sleep to simulate input generation at two different times
+4. Run sdp_common_upstream_materialized_view:
+```shell
+spark-pipelines run --spec sdp_common_upstream_materialized_view_spec.yaml
+```
+
+You should see a single sleep invocation: 
+```
+2026-03-12 07:06:23: Importing /Users/bartosz/workspace/wfc/spark-playground/structured-streaming-declarative-pipelines/pyspark/sdp_common_upstream_materialized_view.py...
+⏰ Sleeping for 9 seconds
+2026-03-12 07:06:33: Starting run...
+2026-03-12 06:06:34: Flow spark_catalog.default.in_memory_numbers_1 is QUEUED.
+2026-03-12 06:06:34: Flow spark_catalog.default.in_memory_numbers_2 is QUEUED.
+2026-03-12 06:06:34: Flow spark_catalog.default.in_memory_numbers_1 is PLANNING.
+2026-03-12 06:06:34: Flow spark_catalog.default.in_memory_numbers_1 is STARTING.
+2026-03-12 06:06:34: Flow spark_catalog.default.in_memory_numbers_1 is RUNNING.
+2026-03-12 06:06:34: Flow spark_catalog.default.in_memory_numbers_2 is PLANNING.
+2026-03-12 06:06:34: Flow spark_catalog.default.in_memory_numbers_2 is STARTING.
+2026-03-12 06:06:34: Flow spark_catalog.default.in_memory_numbers_2 is RUNNING.
+2026-03-12 06:06:35: Flow spark_catalog.default.in_memory_numbers_1 has COMPLETED.
+2026-03-12 06:06:35: Flow spark_catalog.default.in_memory_numbers_2 has COMPLETED.
+2026-03-12 06:06:37: Run is COMPLETED
+```
+
+5. Check the table's outcome with `python sdp_common_upstream_materialized_view_read_table.py`:
+You should see the tables prefixed with the same timestamp value:
+```
+in_memory_numbers_1
++---+----------------+
+| id|          letter|
++---+----------------+
+|  4|20260312070633_D|
+|  5|20260312070633_E|
+|  6|20260312070633_F|
+|  3|               C|
+|  1|               A|
+|  2|               B|
++---+----------------+
+
+in_memory_numbers_2
++---+----------------+
+| id|          letter|
++---+----------------+
+|  4|20260312070633_D|
+|  5|20260312070633_E|
+|  6|20260312070633_F|
+|  1|               A|
+|  2|               B|
+|  3|               C|
++---+----------------+
+```
+
+6. Let's validate now a streaming query with two upstreams. Run:
+```shell
+spark-pipelines run --spec sdp_common_upstream_table_with_python_function_spec.yaml
+```
+
+Again, you should see a single sleep resolution:
+```
+2026-03-12 07:20:56: Found 1 files matching glob './sdp_common_upstream_table_with_python_function.py'
+2026-03-12 07:20:56: Importing /Users/bartosz/workspace/wfc/spark-playground/structured-streaming-declarative-pipelines/pyspark/sdp_common_upstream_table_with_python_function.py...
+⏰ Sleeping for 13 seconds
+Start timestamp will be 1773296469000
+2026-03-12 07:21:09: Starting run...
+2026-03-12 06:21:09: Flow spark_catalog.default.rate_sink_1 is QUEUED.
+2026-03-12 06:21:09: Flow spark_catalog.default.rate_sink_2 is QUEUED.
+2026-03-12 06:21:09: Flow spark_catalog.default.rate_sink_1 is STARTING.
+2026-03-12 06:21:09: Flow spark_catalog.default.rate_sink_1 is RUNNING.
+2026-03-12 06:21:09: Flow spark_catalog.default.rate_sink_2 is STARTING.
+2026-03-12 06:21:09: Flow spark_catalog.default.rate_sink_2 is RUNNING.
+2026-03-12 06:21:11: Flow spark_catalog.default.rate_sink_1 has COMPLETED.
+2026-03-12 06:21:11: Flow spark_catalog.default.rate_sink_2 has COMPLETED.
+2026-03-12 06:21:12: Run is COMPLETED.
+```
+
+7. Check the tables with `python sdp_common_upstream_table_with_python_function_read_table.py`
+```
+rate_sink_1
++-------------------+-----+
+|          timestamp|value|
++-------------------+-----+
+|2026-03-12 06:21:09|    0|
+|2026-03-12 06:21:09|    2|
+|2026-03-12 06:21:09|    4|
+|2026-03-12 06:21:09|    1|
+|2026-03-12 06:21:09|    3|
++-------------------+-----+
+
+rate_sink_2
++-------------------+-----+
+|          timestamp|value|
++-------------------+-----+
+|2026-03-12 06:21:09|    0|
+|2026-03-12 06:21:09|    2|
+|2026-03-12 06:21:09|    4|
+|2026-03-12 06:21:09|    1|
+|2026-03-12 06:21:09|    3|
++-------------------+-----+
+```
+
+As you can see, here too the content is the same despite referencing the same upstream node.
+
 ## Errors
 1. Discuss the retries by running the [errors_sdp_materialized_view.py](errors_sdp_materialized_view.py)
 * the code breaks because the schema of the combined `DataFrame`s is different
